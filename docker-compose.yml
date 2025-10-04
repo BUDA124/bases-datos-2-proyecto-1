@@ -1,0 +1,66 @@
+services:
+  # MongoDB Replica Set
+  mongo1:
+    image: mongo
+    container_name: mongo1
+    command: ["--replSet", "myReplicaSet", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo1-data:/data/db
+
+  mongo2:
+    image: mongo
+    container_name: mongo2
+    command: ["--replSet", "myReplicaSet", "--bind_ip_all"]
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo2-data:/data/db
+
+  # Neo4j Cluster
+  neo4j1:
+    image: neo4j:4.4-enterprise
+    container_name: neo4j1
+    ports:
+      - "7474:7474" # HTTP
+      - "7687:7687" # Bolt
+    environment:
+      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
+      - NEO4J_AUTH=neo4j/password123
+      - NEO4J_dbms_mode=CORE
+      - NEO4J_causal__clustering_expected__number__of__cores=2
+      - NEO4J_causal__clustering_initial__discovery__members=neo4j1:5000,neo4j2:5000
+      - NEO4J_dbms_connector_bolt_advertised__address=localhost:7687
+
+  neo4j2:
+    image: neo4j:4.4-enterprise
+    container_name: neo4j2
+    ports:
+      - "7475:7474"
+      - "7688:7687"
+    environment:
+      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
+      - NEO4J_AUTH=neo4j/password123
+      - NEO4J_dbms_mode=CORE
+      - NEO4J_causal__clustering_expected__number__of__cores=2
+      - NEO4J_causal__clustering_initial__discovery__members=neo4j1:5000,neo4j2:5000
+      - NEO4J_dbms_connector_bolt_advertised__address=localhost:7688
+
+  # Redis
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  # Cassandra
+  cassandra:
+    image: cassandra
+    container_name: cassandra
+    ports:
+      - "9042:9042"
+
+volumes:
+  mongo1-data:
+  mongo2-data:
